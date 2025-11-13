@@ -148,6 +148,7 @@ router.post("/sign-up", async (req, res) => {
             studentId,
             password: hashedPassword,
             isVerified: true,
+            createAt: Date.now(),
         });
 
         await user.save();
@@ -541,7 +542,6 @@ router.post("/forgot-password", async (req, res) => {
     }
 });
 
-// POST /api/auth/reset-password (새 비밀번호 설정)
 /**
  * @swagger
  * /api/v1/auth/reset-password:

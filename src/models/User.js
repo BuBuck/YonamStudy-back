@@ -70,17 +70,11 @@ const userSchema = new mongoose.Schema({
     // 6자리 코드 저장
     emailVerificationCode: {
         type: String,
-        default: false,
-    },
-    // 코드 만료 시간 (예: 3분)
-    emailVerificationCodeExpiress: {
-        type: Date,
-        required: false,
     },
 
     // 6. 비밀번호 재설정 관련 필드
     passwordResetToken: String,
-    passwordResetExpiress: Date,
+    passwordResetExpires: Date,
 
     // 7. 웹소켓 관련
     // 웹소켓 토큰 (socket.id)
@@ -90,7 +84,7 @@ const userSchema = new mongoose.Schema({
     // 유저 온라인 상태
     online: {
         type: Boolean,
-        dafault: false,
+        default: false,
     },
 
     // 계정 생성 날짜 / 계정 업데이트 날짜

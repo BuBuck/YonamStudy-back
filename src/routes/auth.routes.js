@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
 const EmailVerification = require("../models/EmailVerification");
+
 const transporter = require("../utils/mailer");
 
 const router = express.Router();
@@ -67,7 +68,7 @@ const router = express.Router();
  *             email:
  *               type: string
  *               example: 22560001@st.yc.ac.kr
- *             msg:
+ *             message:
  *               type: string
  *               example: 회원가입이 성공적으로 완료되었습니다. 로그인해주세요.
  *       400:
@@ -75,7 +76,7 @@ const router = express.Router();
  *         schema:
  *           type: object
  *           properties:
- *             msg:
+ *             message:
  *               type: string
  *               example: 이미 가입된 이메일 또는 학번입니다.
  *       500:
@@ -83,8 +84,7 @@ const router = express.Router();
  */
 router.post("/sign-up", async (req, res) => {
     try {
-        const { name, major, phoneNumber, birthdate, email, password } =
-            req.body;
+        const { name, major, phoneNumber, birthdate, email, password } = req.body;
 
         // 이메일 형식 및 학번 추출
         const emailRegex = /^([0-9]{8})@st\.yc\.ac\.kr$/;
@@ -92,7 +92,7 @@ router.post("/sign-up", async (req, res) => {
 
         if (!match) {
             return res.status(400).json({
-                msg: "유효한 학교 이메일(@st.yc.ac.kr) 형식이 아닙니다.",
+                message: "유효한 학교 이메일(@st.yc.ac.kr) 형식이 아닙니다.",
             });
         }
 
@@ -101,27 +101,23 @@ router.post("/sign-up", async (req, res) => {
         // 이메일 또는 학번 중복 확인
         let user = await User.findOne({ $or: [{ email }, { studentId }] });
         if (user) {
-            return res
-                .status(400)
-                .json({ msg: "이미 가입된 이메일 또는 학번입니다." });
+            return res.status(400).json({ message: "이미 가입된 이메일 또는 학번입니다." });
         }
 
         // 비밀번호 길이 확인
         if (password.length < 8) {
-            return res
-                .status(400)
-                .json({ msg: "비밀번호는 최소 8자 이상이어야 합니다." });
+            return res.status(400).json({ message: "비밀번호는 최소 8자 이상이어야 합니다." });
         }
 
         // 최종 가입 전, 이메일 인증이 되었는지 확인
         const verificationRecord = await EmailVerification.findOne({ email });
 
         if (!verificationRecord) {
-            return res.status(400).json({ msg: "이메일 인증이 필요합니다." });
+            return res.status(400).json({ message: "이메일 인증이 필요합니다." });
         }
         if (!verificationRecord.isVerified) {
             return res.status(400).json({
-                msg: "이메일 인증이 완료되지 않았습니다. 코드를 확인해주세요.",
+                message: "이메일 인증이 완료되지 않았습니다. 코드를 확인해주세요.",
             });
         }
 
@@ -133,22 +129,27 @@ router.post("/sign-up", async (req, res) => {
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         let verificationCode = "";
         for (let i = 0; i < 6; i++) {
-            verificationCode += chars.charAt(
-                Math.floor(Math.random() * chars.length)
-            );
+            verificationCode += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        let fommattedPhoneNumber = phoneNumber;
+        // 전화번호에 하이픈이 없는 경우 하이픈 추가
+        if (!phoneNumber.match(/^\d{3}-\d{4}-\d{4}$/)) {
+            fommattedPhoneNumber = phoneNumber.replace(/(\d{3})-?(\d{4})-?(\d{4})/, "$1-$2-$3");
         }
 
         // 새로운 사용자 생성 (모든 필드 포함)
         user = new User({
             name,
             major,
-            phoneNumber,
+            phoneNumber: fommattedPhoneNumber,
             birthdate,
             email,
             studentId,
             password: hashedPassword,
             isVerified: true,
-            createAt: Date.now(),
+            online: false,
+            group: [],
         });
 
         await user.save();
@@ -158,12 +159,12 @@ router.post("/sign-up", async (req, res) => {
 
         res.status(201).json({
             email: user.email,
-            msg: "회원가입이 성공적으로 완료되었습니다. 로그인해주세요.",
+            message: "회원가입이 성공적으로 완료되었습니다. 로그인해주세요.",
         });
-    } catch (err) {
+    } catch (error) {
         // Mongoose Validation Error (모델 정의에 맞지 않을 때)
         if (err.name == "ValidationError") {
-            return res.status(400).json({ msg: err.message });
+            return res.status(400).json({ message: err.message });
         }
         console.error(err.message);
         res.status(500).send("ServerError");
@@ -202,7 +203,7 @@ router.post("/sign-up", async (req, res) => {
  *         schema:
  *           type: object
  *           properties:
- *             msg:
+ *             message:
  *               type: string
  *               example: 이메일 인증이 성공적으로 완료되었습니다. 나머지 정보를 입력해주세요.
  *             isVerified:
@@ -213,7 +214,7 @@ router.post("/sign-up", async (req, res) => {
  *         schema:
  *           type: object
  *           properties:
- *             msg:
+ *             message:
  *               type: string
  *               example: 인증 코드가 올바르지 않습니다.
  *       500:
@@ -227,19 +228,17 @@ router.post("/verify-code", async (req, res) => {
         // 사용자 찾기
         const verification = await EmailVerification.findOne({ email });
         if (!verification) {
-            return res.status(400).json({ msg: "존재하지 않는 이메일입니다." });
+            return res.status(400).json({ message: "존재하지 않는 이메일입니다." });
         }
 
         // 이미 인증되어있는지 확인
         if (verification.isVerified) {
-            return res.status(400).json({ msg: "이미 인증된 사용자입니다." });
+            return res.status(400).json({ message: "이미 인증된 사용자입니다." });
         }
 
         // 인증 코드 일치 여부 확인
         if (verification.code !== code) {
-            return res
-                .status(400)
-                .json({ msg: "인증 코드가 올바르지 않습니다." });
+            return res.status(400).json({ message: "인증 코드가 올바르지 않습니다." });
         }
 
         // 인증 성공 처리
@@ -248,12 +247,12 @@ router.post("/verify-code", async (req, res) => {
         await verification.save();
 
         res.json({
-            msg: "이메일 인증이 성공적으로 완료되었습니다. 나머지 정보를 입력해주세요.",
+            message: "이메일 인증이 성공적으로 완료되었습니다. 나머지 정보를 입력해주세요.",
             isVerified: true,
         });
-    } catch (err) {
+    } catch (error) {
         console.log(err.message);
-        res.status(500).json({ msg: "Server Error" });
+        res.status(500).json({ message: "Server Error" });
     }
 });
 
@@ -285,7 +284,7 @@ router.post("/verify-code", async (req, res) => {
  *         schema:
  *           type: object
  *           properties:
- *             msg:
+ *             message:
  *               type: string
  *               example: 인증 코드를 발송했습니다. 이메일을 확인해주세요.
  *       400:
@@ -293,7 +292,7 @@ router.post("/verify-code", async (req, res) => {
  *         schema:
  *           type: object
  *           properties:
- *             msg:
+ *             message:
  *               type: string
  *               example: 이미 가입된 이메일 또는 학번입니다.
  *       500:
@@ -307,7 +306,7 @@ router.post("/resend-code", async (req, res) => {
         const match = email.match(emailRegex);
         if (!match) {
             return res.status(400).json({
-                msg: "유효한 학교 이메일(@st.yc.ac.kr) 형식이 아닙니다.",
+                message: "유효한 학교 이메일(@st.yc.ac.kr) 형식이 아닙니다.",
             });
         }
         const studentId = match[1];
@@ -315,18 +314,14 @@ router.post("/resend-code", async (req, res) => {
         const user = await User.findOne({ $or: [{ email }, { studentId }] });
 
         if (user) {
-            return res
-                .status(400)
-                .json({ msg: "이미 가입된 이메일 또는 학번입니다." });
+            return res.status(400).json({ message: "이미 가입된 이메일 또는 학번입니다." });
         }
 
         // 새 코드 생성
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         let verificationCode = "";
         for (let i = 0; i < 6; i++) {
-            verificationCode += chars.charAt(
-                Math.floor(Math.random() * chars.length)
-            );
+            verificationCode += chars.charAt(Math.floor(Math.random() * chars.length));
         }
 
         await EmailVerification.findOneAndUpdate(
@@ -342,12 +337,12 @@ router.post("/resend-code", async (req, res) => {
         // 이메일 재발송
         await transporter.sendMail({
             to: email,
-            subject: "스터디 그룹 매칭 시스템 인증 코드 (재발송)",
+            subject: "스터디 그룹 매칭 시스템 인증 코드",
             html: `<p>새로운 인증 코드는 <strong>${verificationCode}</strong> 입니다. 3분 내에 입력해주세요.</p>`,
         });
 
-        res.json({ msg: "인증 코드를 재발송했습니다. 이메일을 확인해주세요." });
-    } catch (err) {
+        res.json({ message: "인증 코드를 재발송했습니다. 이메일을 확인해주세요." });
+    } catch (error) {
         console.error(err.message);
         res.status(500).send("Server Error");
     }
@@ -407,7 +402,7 @@ router.post("/resend-code", async (req, res) => {
  *         schema:
  *           type: object
  *           properties:
- *             msg:
+ *             message:
  *               type: string
  *               example: 비밀번호가 일치하지 않습니다.
  *       401:
@@ -415,7 +410,7 @@ router.post("/resend-code", async (req, res) => {
  *         schema:
  *           type: object
  *           properties:
- *             msg:
+ *             message:
  *               type: string
  *               example: 이메일 인증이 필요합니다.
  *       500:
@@ -429,20 +424,18 @@ router.post("/login", async (req, res) => {
         // 학번으로 사용자 검색
         const user = await User.findOne({ studentId });
         if (!user) {
-            return res.status(400).json({ msg: "존재하지 않는 학번입니다." });
+            return res.status(400).json({ message: "존재하지 않는 학번입니다." });
         }
 
         // 비밀번호 확인
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res
-                .status(400)
-                .json({ msg: "비밀번호가 일치하지 않습니다." });
+            return res.status(400).json({ message: "비밀번호가 일치하지 않습니다." });
         }
 
         // 이메일 인증 여부 확인
         if (!user.isVerified) {
-            return res.status(401).json({ msg: "이메일 인증이 필요합니다." });
+            return res.status(401).json({ message: "이메일 인증이 필요합니다." });
         }
 
         // JWT 생성
@@ -454,24 +447,27 @@ router.post("/login", async (req, res) => {
             },
         };
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: "1h" },
-            (err, token) => {
-                if (err) throw err;
+        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" }, (err, token) => {
+            if (err) throw err;
 
-                res.json({
-                    token,
-                    user: {
-                        studentId: user.studentId,
-                        name: user.name,
-                        major: user.major,
-                    },
-                });
-            }
-        );
-    } catch (err) {
+            const expiresInMs = 60 * 60 * 1000;
+            const expirationTime = new Date().getTime() + expiresInMs;
+
+            res.json({
+                expiresToken: token,
+                expiresAt: expirationTime,
+                user: {
+                    userId: user._id,
+                    studentId: user.studentId,
+                    name: user.name,
+                    major: user.major,
+                    online: user.online,
+                    group: user.group,
+                },
+            });
+        });
+        console.log(user.createdAt);
+    } catch (error) {
         console.error(err.message);
         res.status(500).send("Server Error");
     }
@@ -505,7 +501,7 @@ router.post("/login", async (req, res) => {
  *         schema:
  *           type: object
  *         properties:
- *           msg:
+ *           message:
  *             type: string
  *             example: 비밀번호 재설정 이메일을 발송했습니다.
  *       500:
@@ -517,7 +513,7 @@ router.post("/forgot-password", async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.json({ msg: "비밀번호 재설정 이메일을 발송했습니다." });
+            return res.json({ message: "비밀번호 재설정 이메일을 발송했습니다." });
         }
 
         // 재설정 토큰 생성 (1시간)
@@ -535,8 +531,8 @@ router.post("/forgot-password", async (req, res) => {
             html: `비밀번호를 재설정하려면 다음 링크를 클릭하세요: <a href="${resetUrl}">${resetUrl}</a>`,
         });
 
-        res.json({ msg: "비밀번호 재설정 이메일을 발송했습니다." });
-    } catch (err) {
+        res.json({ message: "비밀번호 재설정 이메일을 발송했습니다." });
+    } catch (error) {
         console.error(err.message);
         res.status(500).send("Server Error");
     }
@@ -577,7 +573,7 @@ router.post("/forgot-password", async (req, res) => {
  *         schema:
  *           type: object
  *           properties:
- *             msg:
+ *             message:
  *               type: string
  *               example: 비밀번호가 성공적으로 재설정되었습니다.
  *       400:
@@ -585,7 +581,7 @@ router.post("/forgot-password", async (req, res) => {
  *         schema:
  *           type: object
  *           properties:
- *             msg:
+ *             message:
  *               type: string
  *               example: 유효하지 않거나 만료된 토큰입니다.
  *       500:
@@ -603,9 +599,7 @@ router.post("/reset-password", async (req, res) => {
         });
 
         if (!user) {
-            return res
-                .status(400)
-                .json({ msg: "유효하지 않거나 만료된 토큰입니다." });
+            return res.status(400).json({ message: "유효하지 않거나 만료된 토큰입니다." });
         }
 
         // 새 비밀번호 해싱
@@ -618,10 +612,10 @@ router.post("/reset-password", async (req, res) => {
 
         await user.save();
 
-        res.json({ msg: "비밀번호가 성공적으로 재설정되었습니다." });
-    } catch (err) {
+        res.json({ message: "비밀번호가 성공적으로 재설정되었습니다." });
+    } catch (error) {
         console.error(err.message);
-        res.status(500).json({ msg: "Server Error" });
+        res.status(500).json({ message: "Server Error" });
     }
 });
 

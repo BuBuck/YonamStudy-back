@@ -466,7 +466,6 @@ router.post("/login", async (req, res) => {
                 },
             });
         });
-        console.log(user.createdAt);
     } catch (error) {
         console.error(err.message);
         res.status(500).send("Server Error");

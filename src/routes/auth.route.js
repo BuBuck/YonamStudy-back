@@ -163,10 +163,10 @@ router.post("/sign-up", async (req, res) => {
         });
     } catch (error) {
         // Mongoose Validation Error (모델 정의에 맞지 않을 때)
-        if (err.name == "ValidationError") {
-            return res.status(400).json({ message: err.message });
+        if (error.name == "ValidationError") {
+            return res.status(400).json({ message: error.message });
         }
-        console.error(err.message);
+        console.error(error.message);
         res.status(500).send("ServerError");
     }
 });
@@ -251,7 +251,7 @@ router.post("/verify-code", async (req, res) => {
             isVerified: true,
         });
     } catch (error) {
-        console.log(err.message);
+        console.log(error.message);
         res.status(500).json({ message: "Server Error" });
     }
 });
@@ -343,7 +343,7 @@ router.post("/resend-code", async (req, res) => {
 
         res.json({ message: "인증 코드를 재발송했습니다. 이메일을 확인해주세요." });
     } catch (error) {
-        console.error(err.message);
+        console.error(error.message);
         res.status(500).send("Server Error");
     }
 });
@@ -467,7 +467,7 @@ router.post("/login", async (req, res) => {
             });
         });
     } catch (error) {
-        console.error(err.message);
+        console.error(error.message);
         res.status(500).send("Server Error");
     }
 });
@@ -532,7 +532,7 @@ router.post("/forgot-password", async (req, res) => {
 
         res.json({ message: "비밀번호 재설정 이메일을 발송했습니다." });
     } catch (error) {
-        console.error(err.message);
+        console.error(error.message);
         res.status(500).send("Server Error");
     }
 });
@@ -613,7 +613,7 @@ router.post("/reset-password", async (req, res) => {
 
         res.json({ message: "비밀번호가 성공적으로 재설정되었습니다." });
     } catch (error) {
-        console.error(err.message);
+        console.error(error.message);
         res.status(500).json({ message: "Server Error" });
     }
 });

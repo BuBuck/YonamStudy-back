@@ -522,7 +522,7 @@ router.post("/forgot-password", async (req, res) => {
         await user.save();
 
         // 재성정 링크 (프론트 라이트)
-        const resetUrl = `http://${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
         await transporter.sendMail({
             to: user.email,

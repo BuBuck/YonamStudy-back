@@ -1,13 +1,12 @@
 const express = require("express");
 const app = express();
-const bodyParser = require("body-parser");
 const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
 
 app.use(cors());
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 const specs = require("./config/swagger");
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
@@ -17,6 +16,9 @@ app.use("/api/auth", authRoute);
 
 const chatRoute = require("./routes/chat.route");
 app.use("/api/chat", chatRoute);
+
+const commentRoute = require("./routes/comment.route");
+app.use("/api/group", commentRoute);
 
 // const Group = require("./models/Group");
 // const User = require("./models/User");

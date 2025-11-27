@@ -43,8 +43,6 @@ router.get("/notification", async (req, res) => {
             total += stat.count;
         });
 
-        console.log("계산된 알림:", { total, groupCounts });
-
         res.status(200).json({ total: total, groupCounts: groupCounts });
     } catch (error) {
         console.error(error.message);

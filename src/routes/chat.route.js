@@ -116,7 +116,7 @@ router.get("/lastMessages", async (req, res) => {
     }
 });
 
-router.get("/messages/:groupId", async (req, res) => {
+router.get("/:groupId/messages", async (req, res) => {
     try {
         const { groupId } = req.params;
 

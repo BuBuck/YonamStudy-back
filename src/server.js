@@ -12,7 +12,7 @@ const socket = new Server(httpServer, {
     },
 });
 
-require("./utils/socket.js")(socket);
+require("./socket.js")(socket);
 
 httpServer.listen(process.env.PORT, () => {
     console.log(`${process.env.PORT}포트에서 서버가 실행되었습니다.`);

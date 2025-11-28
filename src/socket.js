@@ -1,5 +1,5 @@
-const messageController = require("../controllers/message.controller");
-const groupController = require("../controllers/group.controller");
+const messageController = require("./controllers/message.controller");
+const groupController = require("./controllers/group.controller");
 
 module.exports = function (io) {
     io.on("connection", async (socket) => {

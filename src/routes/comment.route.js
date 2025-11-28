@@ -1,5 +1,4 @@
 const express = require("express");
-const mongoose = require("mongoose");
 
 const Comment = require("../models/Comment");
 
@@ -13,7 +12,7 @@ router.get("/:groupId/comments", async (req, res) => {
 
         const comments = await Comment.find({ group: groupId, isDeleted: false })
             .populate("commenter", "name major")
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: 1 });
 
         if (!comments) return res.status(400).json({ message: "댓글 없음" });
 

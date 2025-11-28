@@ -23,7 +23,7 @@ router.get("/:groupId/comments", async (req, res) => {
     }
 });
 
-router.post("/:groupId/comment", async (req, res) => {
+router.post("/:groupId/comments", async (req, res) => {
     try {
         const { groupId } = req.params;
         const { content, userId } = req.body;

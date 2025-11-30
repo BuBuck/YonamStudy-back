@@ -192,3 +192,7 @@ dist
 # Ignore all local history of files
 .history
 .ionide
+
+# 사진 저장하는 파일
+uploads/
+!uploads/.gitkeep

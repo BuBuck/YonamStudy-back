@@ -16,14 +16,15 @@ module.exports = function (io) {
                 // 나중에 그룹에 초대되었을 떄 메시지
                 // const welcomeMessage = {
                 //     chat: `${user.name}님이 ${user.group.toString()}에 가입하셨습니다.`,
-                //     user: { id: null, name: "system" },
+                //     user: { id: null, name: "server" },
                 // };
 
                 // socket.to(user.group.toString()).emit("message", welcomeMessage);
 
-                cb({ ok: true });
+                if (cb) cb({ ok: true });
             } catch (error) {
-                cb({ ok: false, error: error.message });
+                console.error("joinGroup error:", error);
+                if (cb) cb({ ok: false, error: error.message });
             }
         });
 

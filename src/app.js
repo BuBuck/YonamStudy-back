@@ -1,9 +1,22 @@
 const express = require("express");
+const fileUpload = require("express-fileupload");
+const path = require("path");
 const app = express();
 const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
 
+const initStorage = require("./utils/initStorage");
+
 app.use(cors());
+
+app.use(
+    fileUpload({
+        createParentPath: true,
+        limits: {
+            fileSize: 5 * 1024 * 1024,
+        },
+    })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -11,43 +24,23 @@ app.use(express.urlencoded({ extended: false }));
 const specs = require("./config/swagger");
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+const userRoute = require("./routes/user.route");
+app.use("/api/user", userRoute);
+
 const authRoute = require("./routes/auth.route");
 app.use("/api/auth", authRoute);
 
-const chatRoute = require("./routes/chat.route");
-app.use("/api/chat", chatRoute);
+const messageRoute = require("./routes/message.route");
+app.use("/api/study-groups", messageRoute);
 
 const commentRoute = require("./routes/comment.route");
-app.use("/api/group", commentRoute);
+app.use("/api/study-groups", commentRoute);
 
-// const Group = require("./models/Group");
-// const User = require("./models/User");
-// app.get("/pGroup", async (req, res) => {
-//     const user = await User.findOne({ name: "선정인" });
-//     const myGroup = await Group.findOne({ group: "JavaScript 스터디" });
-//     user.group.pop();
-//     user.group.push(myGroup);
-//     await user.save();
-//     console.log(user);
-// });
+const groupRoute = require("./routes/group.route");
+app.use("/api/study-groups", groupRoute);
 
-// app.get("/cGroup", async (req, res) => {
-//     Group.insertMany([
-//         {
-//             group: "JavaScript 스터디",
-//             groupMembers: [],
-//         },
-//         {
-//             group: "React 스터디",
-//             groupMembers: [],
-//         },
-//         {
-//             group: "Node.js 스터디",
-//             groupMembers: [],
-//         },
-//     ])
-//         .then(() => res.send("ok"))
-//         .catch((error) => res.send(error));
-// });
+initStorage();
 
 module.exports = app;

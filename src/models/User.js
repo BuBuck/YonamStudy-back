@@ -90,6 +90,12 @@ const userSchema = new mongoose.Schema(
                 ref: "Group",
             },
         ],
+
+        // 9. 프로필 사진
+        userProfile: {
+            type: String,
+            default: "/uploads/users/default-userImage.png",
+        },
     },
     { timestamps: true }
 );

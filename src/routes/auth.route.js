@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const EmailVerification = require("../models/EmailVerification");
 
-const transporter = require("../utils/mailer");
+const transporter = require("../config/mailer");
 
 const router = express.Router();
 
@@ -298,7 +298,7 @@ router.post("/verify-code", async (req, res) => {
  *       500:
  *         description: 서버 내부 오류 (메일 발송 실패 등)
  */
-router.post("/resend-code", async (req, res) => {
+router.post("/send-verification", async (req, res) => {
     try {
         const { email } = req.body;
 

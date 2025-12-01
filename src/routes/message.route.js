@@ -123,7 +123,6 @@ router.get("/:groupId/messages", async (req, res) => {
         const { groupId } = req.params;
         const userId = req.headers.userid;
 
-        console.log(userId);
         const groupData = await groupController.getGroup(groupId);
         const checkMember = await groupController.checkMember(groupData, userId);
 

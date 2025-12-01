@@ -10,12 +10,12 @@ const swaggerDefinition = {
     },
     servers: [
         {
-            url: "http://localhost:5001",
-            description: "로컬 서버",
-        },
-        {
             url: process.env.DEPLOY_URL,
             description: "배포 서버",
+        },
+        {
+            url: "http://localhost:5001",
+            description: "로컬 서버",
         },
     ],
 };

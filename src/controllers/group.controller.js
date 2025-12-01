@@ -17,10 +17,10 @@ groupController.getGroup = async (groupId) => {
 groupController.checkMember = async (groupData, userId) => {
     let isCollected = false;
 
-    if (groupData.groupLeader._id.toString() === userId) return (isCollected = true);
+    if (groupData.groupLeader._id.toString() === userId.toString()) return (isCollected = true);
 
     groupData.groupMembers.map((groupMember) => {
-        if (groupMember._id.toString() === userId) return (isCollected = true);
+        if (groupMember._id.toString() === userId.toString()) return (isCollected = true);
     });
 
     return isCollected;

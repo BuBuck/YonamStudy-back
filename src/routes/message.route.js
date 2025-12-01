@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 
 const Message = require("../models/Message");
 
+const groupController = require("../controllers/group.controller");
+
 const router = express.Router();
 
 router.get("/notification", async (req, res) => {
@@ -119,12 +121,21 @@ router.get("/lastMessages", async (req, res) => {
 router.get("/:groupId/messages", async (req, res) => {
     try {
         const { groupId } = req.params;
+        const userId = req.headers.userid;
+
+        console.log(userId);
+        const groupData = await groupController.getGroup(groupId);
+        const checkMember = await groupController.checkMember(groupData, userId);
+
+        if (!checkMember) {
+            return res.status(403).json({ message: `당신이 소속된 스터디 그룹이 아님` });
+        }
 
         const messages = await Message.find({ group: groupId })
             .populate("sender", "name userProfile")
             .sort({ createdAt: 1 });
 
-        res.json(messages);
+        res.status(200).json(messages);
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: "Server Error" });

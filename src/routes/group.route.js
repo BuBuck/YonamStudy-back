@@ -42,7 +42,20 @@ router.post("/upload-groupImage", async (req, res) => {
     }
 });
 
-router.get("/", async (req, res) => {});
+router.get("/:groupId", async (req, res) => {
+    try {
+        const { groupId } = req.params;
+
+        const groupData = await groupController.getGroup(groupId);
+
+        console.log(groupData);
+
+        res.status(200).json(groupData);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
 
 router.post("/", async (req, res) => {
     try {

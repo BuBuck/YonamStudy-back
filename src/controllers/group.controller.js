@@ -8,6 +8,24 @@ groupController.getAllGroups = async () => {
     return groupList;
 };
 
+groupController.getGroup = async (groupId) => {
+    const groupData = await Group.findById(groupId);
+
+    return groupData;
+};
+
+groupController.checkMember = async (groupData, userId) => {
+    let isCollected = false;
+
+    if (groupData.groupLeader._id.toString() === userId) return (isCollected = true);
+
+    groupData.groupMembers.map((groupMember) => {
+        if (groupMember._id.toString() === userId) return (isCollected = true);
+    });
+
+    return isCollected;
+};
+
 groupController.saveGroup = async (groupName, description, groupImageUrl, userId) => {
     const newGroup = new Group({
         group: groupName,

@@ -42,13 +42,56 @@ router.post("/upload-groupImage", async (req, res) => {
     }
 });
 
+router.put("/update-groupImage", async (req, res) => {
+    try {
+        const { groupId, groupName } = req.body;
+
+        let dbPath = `/uploads/study-groups/default-groupImage.png`;
+
+        if (req.files && req.files.image) {
+            const groupImage = req.files.image;
+            const extension = path.extname(groupImage.name);
+            const fileName = `${groupName.toString()}${extension}`;
+            const uploadPath = path.join(__dirname, "../uploads/study-groups", fileName);
+
+            await groupImage.mv(uploadPath);
+
+            dbPath = `/uploads/study-groups/${fileName}`;
+        }
+
+        const updatedGroup = await Group.findByIdAndUpdate(
+            groupId,
+            { groupImage: dbPath },
+            { new: true }
+        );
+
+        res.status(200).json({
+            filePath: dbPath,
+            group: updatedGroup,
+            message: "업로드 및 DB 저장 완료",
+        });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
+router.get("/", async (req, res) => {
+    try {
+        const groups = await groupController.getAllGroups();
+
+        res.status(200).json(groups);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
 router.get("/:groupId", async (req, res) => {
     try {
         const { groupId } = req.params;
 
         const groupData = await groupController.getGroup(groupId);
-
-        console.log(groupData);
 
         res.status(200).json(groupData);
     } catch (error) {
@@ -89,6 +132,15 @@ router.post("/", async (req, res) => {
 
 router.put("/:groupId", async (req, res) => {});
 
-router.delete("/:groupId", async (req, res) => {});
+router.delete("/:groupId", async (req, res) => {
+    try {
+        const { groupId } = req.params;
+
+        res.status(200).json({ message: "스터디 그룹이 삭제되었습니다." });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
 
 module.exports = router;

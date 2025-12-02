@@ -26,11 +26,11 @@ groupController.checkMember = async (groupData, userId) => {
     return isCollected;
 };
 
-groupController.saveGroup = async (groupName, description, groupImageUrl, userId) => {
+groupController.saveGroup = async (groupName, description, groupImage, userId) => {
     const newGroup = new Group({
         group: groupName,
         description: description,
-        groupImage: groupImageUrl,
+        groupImage: groupImage,
         groupLeader: userId,
         groupMembers: [],
     });
@@ -40,11 +40,28 @@ groupController.saveGroup = async (groupName, description, groupImageUrl, userId
     return newGroup;
 };
 
-groupController.checkDuplicatedGroupName = async (groupList, groupName) => {
+groupController.updateGroup = async (groupId, groupName, description, groupImage) => {
+    const updatedGroup = await Group.findByIdAndUpdate(
+        groupId,
+        {
+            group: groupName,
+            description: description,
+            groupImage: groupImage,
+        },
+        { new: true }
+    );
+
+    await updatedGroup.save();
+
+    return updatedGroup;
+};
+
+groupController.checkDuplicatedGroupName = async (groupList, groupName, groupId = null) => {
     let isDuplicate = false;
 
     groupList.map((group) => {
         if (group.group.toString() === groupName.toString()) {
+            if (group._id.toString() === groupId.toString()) return isDuplicate;
             return (isDuplicate = true);
         }
     });

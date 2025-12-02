@@ -2,6 +2,7 @@ const express = require("express");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const path = require("path");
 
 const User = require("../models/User");
 const EmailVerification = require("../models/EmailVerification");
@@ -331,7 +332,11 @@ router.post("/send-verification", async (req, res) => {
                 code: verificationCode,
                 isVerified: false,
             },
-            { upsert: true, new: true, serDefaultOnInsert: true }
+            {
+                upsert: true,
+                new: true,
+                setDefaultsOnInsert: true,
+            }
         );
 
         const emailTemplate = await ejs.renderFile(
@@ -341,7 +346,6 @@ router.post("/send-verification", async (req, res) => {
             }
         );
 
-        // 이메일 재발송
         await transporter.sendMail({
             to: email,
             subject: "스터디 그룹 매칭 시스템 인증 코드",
@@ -532,7 +536,7 @@ router.post("/forgot-password", async (req, res) => {
         const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
         const emailTemplate = await ejs.renderFile(
-            path.join(__dirname, "../assets/mail/verification-code-mail.ejs"),
+            path.join(__dirname, "../assets/mail/reset-password-mail.ejs"),
             {
                 resetUrl: resetUrl,
             }

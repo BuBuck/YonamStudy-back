@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const path = require("path");
+const ejs = require("ejs");
 
 const User = require("../models/User");
 const EmailVerification = require("../models/EmailVerification");

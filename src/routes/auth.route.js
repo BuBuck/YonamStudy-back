@@ -334,11 +334,18 @@ router.post("/send-verification", async (req, res) => {
             { upsert: true, new: true, serDefaultOnInsert: true }
         );
 
+        const emailTemplate = await ejs.renderFile(
+            path.join(__dirname, "../assets/mail/verification-code-mail.ejs"),
+            {
+                verificationCode: verificationCode,
+            }
+        );
+
         // 이메일 재발송
         await transporter.sendMail({
             to: email,
             subject: "스터디 그룹 매칭 시스템 인증 코드",
-            html: `<p>새로운 인증 코드는 <strong>${verificationCode}</strong> 입니다. 3분 내에 입력해주세요.</p>`,
+            html: emailTemplate,
         });
 
         res.json({ message: "인증 코드를 재발송했습니다. 이메일을 확인해주세요." });
@@ -524,10 +531,17 @@ router.post("/forgot-password", async (req, res) => {
         // 재성정 링크 (프론트 라이트)
         const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
+        const emailTemplate = await ejs.renderFile(
+            path.join(__dirname, "../assets/mail/verification-code-mail.ejs"),
+            {
+                resetUrl: resetUrl,
+            }
+        );
+
         await transporter.sendMail({
             to: user.email,
             subject: "비밀번호 재설정 요청",
-            html: `비밀번호를 재설정하려면 다음 링크를 클릭하세요: <a href="${resetUrl}">${resetUrl}</a>`,
+            html: emailTemplate,
         });
 
         res.json({ message: "비밀번호 재설정 이메일을 발송했습니다." });

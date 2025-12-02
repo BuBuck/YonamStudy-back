@@ -59,6 +59,8 @@ router.put("/:groupId/:commentId", async (req, res) => {
         comment.content = content;
         await comment.save();
 
+        await comment.populate("commenter", "name major");
+
         res.status(200).json(comment);
     } catch (error) {
         console.error(error.message);

@@ -3,6 +3,7 @@ const path = require("path");
 const fs = require("fs");
 
 const Group = require("../models/Group");
+const Comment = require("../models/Comment");
 
 const groupController = require("../controllers/group.controller");
 const userController = require("../controllers/user.controller");
@@ -170,7 +171,27 @@ router.delete("/:groupId", async (req, res) => {
     try {
         const { groupId } = req.params;
 
-        res.status(200).json({ message: "스터디 그룹이 삭제되었습니다." });
+        const group = await groupController.getGroup(groupId);
+
+        if (!group) return res.status(404).json({ message: "삭제하려는 그룹을 찾을 수 없습니다." });
+
+        const deletedComment = await Comment.findOneAndDelete({ group: groupId });
+        const deletedGroup = await Group.findByIdAndDelete(groupId);
+
+        if (group.groupImage !== `/uploads/study-groups/default-groupImage.png`)
+            fs.unlink(uploadPath, (error) => {
+                if (error) {
+                    console.error("파일 삭제 오류:", error);
+                    return;
+                }
+                console.log("파일 삭제 성공!");
+            });
+
+        if (deletedComment) {
+            res.status(200).json({
+                message: `스터디 그룹 '${deletedGroup.group}'이(가) 삭제되었습니다.`,
+            });
+        }
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: "Server Error" });

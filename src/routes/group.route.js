@@ -4,6 +4,7 @@ const fs = require("fs");
 
 const Group = require("../models/Group");
 const Comment = require("../models/Comment");
+const Message = require("../models/Message");
 
 const groupController = require("../controllers/group.controller");
 const userController = require("../controllers/user.controller");
@@ -46,27 +47,35 @@ router.post("/upload-groupImage", async (req, res) => {
 
 router.put("/update-groupImage", async (req, res) => {
     try {
-        const { groupId, groupImage } = req.body;
+        const { groupId } = req.body;
 
-        let dbPath = groupImage;
+        const oldGroup = await Group.findById(groupId);
+        if (!oldGroup) return res.status(404).json({ message: "그룹을 찾을 수 없습니다." });
+
+        let dbPath = oldGroup.groupImage;
 
         if (req.files && req.files.image) {
             const groupImage = req.files.image;
             const extension = path.extname(groupImage.name);
             const fileName = `${groupId.toString()}${extension}`;
-            const uploadPath = path.join(__dirname, "../uploads/study-groups", fileName);
 
-            if (uploadPath !== `${__dirname}/../uploads/study-groups/default-groupImage.png`)
-                fs.unlink(uploadPath, (error) => {
-                    if (error) {
-                        console.error("파일 삭제 오류:", error);
-                        return;
-                    }
-                    console.log("파일 삭제 성공!");
-                });
+            const newUploadPath = path.join(__dirname, "../uploads/study-groups", fileName);
 
-            await groupImage.mv(uploadPath);
+            if (
+                oldGroup.groupImage &&
+                oldGroup.groupImage !== `/uploads/study-groups/default-groupImage.png`
+            ) {
+                const oldFilePath = path.join(__dirname, "..", oldGroup.groupImage);
 
+                if (fs.existsSync(oldFilePath)) {
+                    fs.unlink(oldFilePath, (err) => {
+                        if (err) console.error("기존 파일 삭제 실패:", err);
+                        else console.log("기존 파일 삭제 성공");
+                    });
+                }
+            }
+
+            await groupImage.mv(newUploadPath);
             dbPath = `/uploads/study-groups/${fileName}`;
         }
 
@@ -129,7 +138,10 @@ router.post("/", async (req, res) => {
         const group = await groupController.saveGroup(groupName, description, groupImage, userId);
         await userController.addUserToGroup(userId, group);
 
-        res.status(201).json(group);
+        res.status(201).json({
+            group,
+            message: `스터디 그룹 '${group.group}'이(가) 생성되었습니다.`,
+        });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: "Server Error" });
@@ -175,25 +187,32 @@ router.delete("/:groupId", async (req, res) => {
 
         if (!group) return res.status(404).json({ message: "삭제하려는 그룹을 찾을 수 없습니다." });
 
-        const deletedComment = await Comment.findOneAndDelete({ group: groupId });
+        await Comment.findOneAndDelete({ group: groupId });
+        await Message.findOneAndDelete({ group: groupId });
         const deletedGroup = await Group.findByIdAndDelete(groupId);
 
-        if (group.groupImage !== `/uploads/study-groups/default-groupImage.png`)
-            fs.unlink(uploadPath, (error) => {
-                if (error) {
-                    console.error("파일 삭제 오류:", error);
-                    return;
-                }
-                console.log("파일 삭제 성공!");
-            });
+        if (
+            group.groupImage &&
+            group.groupImage !== `/uploads/study-groups/default-groupImage.png`
+        ) {
+            const deleteFilePath = path.join(__dirname, "..", group.groupImage);
 
-        if (deletedComment) {
-            res.status(200).json({
-                message: `스터디 그룹 '${deletedGroup.group}'이(가) 삭제되었습니다.`,
-            });
+            if (fs.existsSync(deleteFilePath)) {
+                fs.unlink(deleteFilePath, (error) => {
+                    if (error) {
+                        console.error("파일 삭제 오류:", error);
+                        return;
+                    }
+                    console.log("파일 삭제 성공!");
+                });
+            }
         }
+
+        res.status(200).json({
+            message: `스터디 그룹 '${deletedGroup.group}'이(가) 삭제되었습니다.`,
+        });
     } catch (error) {
-        console.error(error.message);
+        console.error(error);
         res.status(500).json({ message: "Server Error" });
     }
 });

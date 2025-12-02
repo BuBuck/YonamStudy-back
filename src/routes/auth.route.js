@@ -253,7 +253,7 @@ router.post("/verify-code", async (req, res) => {
             isVerified: true,
         });
     } catch (error) {
-        console.log(error.message);
+        console.error(error.message);
         res.status(500).json({ message: "Server Error" });
     }
 });

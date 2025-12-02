@@ -187,8 +187,8 @@ router.delete("/:groupId", async (req, res) => {
 
         if (!group) return res.status(404).json({ message: "삭제하려는 그룹을 찾을 수 없습니다." });
 
-        await Comment.findOneAndDelete({ group: groupId });
-        await Message.findOneAndDelete({ group: groupId });
+        await Comment.deleteMany({ group: groupId });
+        await Message.deleteMany({ group: groupId });
         const deletedGroup = await Group.findByIdAndDelete(groupId);
 
         if (

@@ -9,6 +9,7 @@ const User = require("../models/User");
 const EmailVerification = require("../models/EmailVerification");
 
 const transporter = require("../config/mailer");
+const Group = require("../models/Group");
 
 const router = express.Router();
 
@@ -450,6 +451,8 @@ router.post("/login", async (req, res) => {
             return res.status(401).json({ message: "이메일 인증이 필요합니다." });
         }
 
+        const groups = await Group.find({ _id: user.group.map((g) => g) });
+
         // JWT 생성
         const payload = {
             user: {
@@ -474,7 +477,7 @@ router.post("/login", async (req, res) => {
                     name: user.name,
                     major: user.major,
                     online: user.online,
-                    group: user.group,
+                    group: groups,
                 },
             });
         });

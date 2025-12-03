@@ -5,7 +5,7 @@ const userController = {};
 userController.addUserToGroup = async (userId, group) => {
     const user = await User.findById(userId);
 
-    user.group = [...user.group, group];
+    user.group.push(group);
 
     await user.save();
 

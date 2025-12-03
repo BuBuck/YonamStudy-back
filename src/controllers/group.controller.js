@@ -56,12 +56,12 @@ groupController.updateGroup = async (groupId, groupName, description, groupImage
     return updatedGroup;
 };
 
-groupController.checkDuplicatedGroupName = async (groupList, groupName, groupId = null) => {
+groupController.checkDuplicatedGroupName = async (allGroups, groupName, groupId = null) => {
     let isDuplicate = false;
 
-    groupList.map((group) => {
-        if (group.group.toString() === groupName.toString()) {
-            if (group._id.toString() === groupId.toString()) return isDuplicate;
+    allGroups.map((group) => {
+        if (group.group === groupName) {
+            if (group._id === groupId) return isDuplicate;
             return (isDuplicate = true);
         }
     });

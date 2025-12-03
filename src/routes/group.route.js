@@ -126,9 +126,9 @@ router.post("/", async (req, res) => {
 
         if (!userId) return res.status(401).json({ message: "로그인이 필요합니다." });
 
-        const groupList = await groupController.getAllGroups();
+        const allGroups = await groupController.getAllGroups();
         const isDuplicatedGroupName = await groupController.checkDuplicatedGroupName(
-            groupList,
+            allGroups,
             groupName
         );
 

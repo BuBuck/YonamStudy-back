@@ -61,7 +61,7 @@ groupController.checkDuplicatedGroupName = async (allGroups, groupName, groupId 
 
     allGroups.map((group) => {
         if (group.group === groupName) {
-            if (group._id === groupId) return isDuplicate;
+            if (group._id.toString() === groupId) return isDuplicate;
             return (isDuplicate = true);
         }
     });

@@ -524,17 +524,17 @@ router.post("/forgot-password", async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.json({ message: "비밀번호 재설정 이메일을 발송했습니다." });
+            return res.status(404).json({ message: "등록된 이메일을 찾을 수 없습니다." });
         }
 
-        // 재설정 토큰 생성 (1시간)
+        // 재설정 토큰 생성 (10분)
         const resetToken = crypto.randomBytes(20).toString("hex");
         user.passwordResetToken = resetToken;
-        user.passwordResetExpires = Date.now() + 3600000;
+        user.passwordResetExpires = Date.now() + 600000;
         await user.save();
 
         // 재성정 링크 (프론트 라이트)
-        const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+        const resetUrl = `${process.env.FRONTEND_URL}/auth/reset-password?token=${resetToken}`;
 
         const emailTemplate = await ejs.renderFile(
             path.join(__dirname, "../assets/mail/reset-password-mail.ejs"),
@@ -549,10 +549,30 @@ router.post("/forgot-password", async (req, res) => {
             html: emailTemplate,
         });
 
-        res.json({ message: "비밀번호 재설정 이메일을 발송했습니다." });
+        res.status(200).json({ message: "비밀번호 재설정 이메일을 발송했습니다." });
     } catch (error) {
         console.error(error.message);
         res.status(500).send("Server Error");
+    }
+});
+
+router.get("/reset-password/:token", async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        const user = await User.findOne({
+            passwordResetToken: token,
+            passwordResetExpires: { $gt: Date.now() },
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: "유효하지 않거나 만료된 토큰입니다." });
+        }
+
+        res.status(200).json({ success: true, message: "유효한 토큰입니다." });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: "Server Error" });
     }
 });
 
@@ -610,27 +630,20 @@ router.post("/reset-password", async (req, res) => {
         const { token } = req.query;
         const { newPassword } = req.body;
 
-        // 토큰 유효성 및 만료 시간 확인
         const user = await User.findOne({
             passwordResetToken: token,
             passwordResetExpires: { $gt: Date.now() },
         });
 
-        if (!user) {
-            return res.status(400).json({ message: "유효하지 않거나 만료된 토큰입니다." });
-        }
-
-        // 새 비밀번호 해싱
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(newPassword, salt);
 
-        // 토큰 비활성화
         user.passwordResetToken = undefined;
         user.passwordResetExpires = undefined;
 
         await user.save();
 
-        res.json({ message: "비밀번호가 성공적으로 재설정되었습니다." });
+        res.status(200).json({ message: "비밀번호가 성공적으로 재설정되었습니다." });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: "Server Error" });

@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 
+const User = require("../models/User");
 const Group = require("../models/Group");
 const Comment = require("../models/Comment");
 const Message = require("../models/Message");
@@ -182,20 +183,23 @@ router.put("/:groupId", async (req, res) => {
 router.delete("/:groupId", async (req, res) => {
     try {
         const { groupId } = req.params;
+        const { userId } = req.body;
 
-        const group = await groupController.getGroup(groupId);
-
-        if (!group) return res.status(404).json({ message: "삭제하려는 그룹을 찾을 수 없습니다." });
-
-        await Comment.deleteMany({ group: groupId });
-        await Message.deleteMany({ group: groupId });
         const deletedGroup = await Group.findByIdAndDelete(groupId);
 
+        if (!deletedGroup._id)
+            return res.status(404).json({ message: "삭제하려는 그룹을 찾을 수 없습니다." });
+
+        await Comment.deleteMany({ group: deletedGroup._id });
+        await Message.deleteMany({ group: deletedGroup._id });
+
+        await User.updateMany({ group: deletedGroup._id }, { $pull: { group: deletedGroup._id } });
+
         if (
-            group.groupImage &&
-            group.groupImage !== `/uploads/study-groups/default-groupImage.png`
+            deletedGroup.groupImage &&
+            deletedGroup.groupImage !== `/uploads/study-groups/default-groupImage.png`
         ) {
-            const deleteFilePath = path.join(__dirname, "..", group.groupImage);
+            const deleteFilePath = path.join(__dirname, "..", deletedGroup.groupImage);
 
             if (fs.existsSync(deleteFilePath)) {
                 fs.unlink(deleteFilePath, (error) => {
@@ -208,7 +212,11 @@ router.delete("/:groupId", async (req, res) => {
             }
         }
 
+        const user = await User.findById(userId);
+        const groups = await Group.find({ _id: user.group.map((g) => g) });
+
         res.status(200).json({
+            groups,
             message: `스터디 그룹 '${deletedGroup.group}'이(가) 삭제되었습니다.`,
         });
     } catch (error) {

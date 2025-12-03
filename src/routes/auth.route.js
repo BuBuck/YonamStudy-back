@@ -643,7 +643,7 @@ router.post("/reset-password", async (req, res) => {
 
         await user.save();
 
-        res.status(200).json({ message: "비밀번호가 성공적으로 재설정되었습니다." });
+        res.status(200).json({ message: "비밀번호가 변경되었습니다." });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: "Server Error" });

@@ -8,12 +8,6 @@ groupController.getAllGroups = async () => {
     return groupList;
 };
 
-groupController.getGroup = async (groupId) => {
-    const groupData = await Group.findById(groupId);
-
-    return groupData;
-};
-
 groupController.checkMember = async (groupData, userId) => {
     let isCollected = false;
 
@@ -33,6 +27,11 @@ groupController.saveGroup = async (groupName, description, groupImage, userId) =
         groupImage: groupImage,
         groupLeader: userId,
         groupMembers: [],
+        schedule: "test",
+        location: "test",
+        period: "test",
+        level: "test",
+        tags: [],
     });
 
     await newGroup.save();

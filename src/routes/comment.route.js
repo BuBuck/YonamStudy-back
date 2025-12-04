@@ -11,7 +11,7 @@ router.get("/:groupId/comments", async (req, res) => {
         const { groupId } = req.params;
 
         const comments = await Comment.find({ group: groupId, isDeleted: false })
-            .populate("commenter", "name major")
+            .populate("commenter", "name major userProfile")
             .sort({ createdAt: 1 });
 
         if (!comments) return res.status(400).json({ message: "댓글 없음" });
@@ -32,7 +32,7 @@ router.post("/:groupId/comments", async (req, res) => {
 
         const newComment = await commentController.saveComment(groupId, userId, content);
 
-        await newComment.populate("commenter", "name major");
+        await newComment.populate("commenter", "name major userProfile");
 
         res.status(201).json(newComment);
     } catch (error) {
@@ -59,7 +59,7 @@ router.put("/:groupId/:commentId", async (req, res) => {
         comment.content = content;
         await comment.save();
 
-        await comment.populate("commenter", "name major");
+        await comment.populate("commenter", "name major userProfile");
 
         res.status(200).json(comment);
     } catch (error) {

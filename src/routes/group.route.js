@@ -58,8 +58,11 @@ router.get("/", async (req, res) => {
 router.get("/:groupId", async (req, res) => {
     try {
         const { groupId } = req.params;
-        const groupData = await groupController.getGroup(groupId);
-        res.status(200).json(groupData);
+        const group = await Group.findById(groupId)
+            .populate("groupLeader")
+            .populate("groupMembers");
+
+        res.status(200).json({ group });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: "Server Error" });

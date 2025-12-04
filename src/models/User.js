@@ -83,19 +83,19 @@ const userSchema = new mongoose.Schema(
             default: false,
         },
 
-        // 8. 스터디그룹 관련
+        // 8. 프로필 사진
+        userProfile: {
+            type: String,
+            default: "/uploads/users/default-userProfile.png",
+        },
+
+        // 9. 스터디그룹 관련
         group: [
             {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Group",
             },
         ],
-
-        // 9. 프로필 사진
-        userProfile: {
-            type: String,
-            default: "/uploads/users/default-userImage.png",
-        },
     },
     { timestamps: true }
 );

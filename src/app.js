@@ -27,7 +27,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const userRoute = require("./routes/user.route");
-app.use("/api/user", userRoute);
+app.use("/api/users", userRoute);
 
 const authRoute = require("./routes/auth.route");
 app.use("/api/auth", authRoute);

@@ -36,10 +36,30 @@ router.post("/upload-groupImage", async (req, res) => {
         );
 
         res.status(200).json({
-            filePath: dbPath,
             group: updatedGroup,
             message: "업로드 및 DB 저장 완료",
         });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
+router.get("/", async (req, res) => {
+    try {
+        const groups = await groupController.getAllGroups();
+        res.status(200).json(groups);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
+router.get("/:groupId", async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const groupData = await groupController.getGroup(groupId);
+        res.status(200).json(groupData);
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: "Server Error" });
@@ -59,7 +79,6 @@ router.put("/update-groupImage", async (req, res) => {
             const groupImage = req.files.image;
             const extension = path.extname(groupImage.name);
             const fileName = `${groupId.toString()}${extension}`;
-
             const newUploadPath = path.join(__dirname, "../uploads/study-groups", fileName);
 
             if (
@@ -67,11 +86,9 @@ router.put("/update-groupImage", async (req, res) => {
                 oldGroup.groupImage !== `/uploads/study-groups/default-groupImage.png`
             ) {
                 const oldFilePath = path.join(__dirname, "..", oldGroup.groupImage);
-
                 if (fs.existsSync(oldFilePath)) {
-                    fs.unlink(oldFilePath, (err) => {
-                        if (err) console.error("기존 파일 삭제 실패:", err);
-                        else console.log("기존 파일 삭제 성공");
+                    fs.unlink(oldFilePath, (error) => {
+                        if (error) console.error("기존 파일 삭제 실패:", error);
                     });
                 }
             }
@@ -87,9 +104,8 @@ router.put("/update-groupImage", async (req, res) => {
         );
 
         res.status(200).json({
-            filePath: dbPath,
-            group: updatedGroup,
-            message: "업로드 및 DB 저장 완료",
+            updatedGroup: updatedGroup,
+            message: "그룹 이미지가 변경되었습니다.",
         });
     } catch (error) {
         console.error(error.message);
@@ -97,24 +113,30 @@ router.put("/update-groupImage", async (req, res) => {
     }
 });
 
-router.get("/", async (req, res) => {
-    try {
-        const groups = await groupController.getAllGroups();
-
-        res.status(200).json(groups);
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ message: "Server Error" });
-    }
-});
-
-router.get("/:groupId", async (req, res) => {
+router.put("/:groupId", async (req, res) => {
     try {
         const { groupId } = req.params;
 
-        const groupData = await groupController.getGroup(groupId);
+        const { groupName, description, userId } = req.body;
 
-        res.status(200).json(groupData);
+        if (!userId) return res.status(401).json({ message: "로그인이 필요합니다." });
+
+        const groupList = await groupController.getAllGroups();
+        const isDuplicatedGroupName = await groupController.checkDuplicatedGroupName(
+            groupList,
+            groupName,
+            groupId
+        );
+
+        if (isDuplicatedGroupName)
+            return res.status(409).json({ message: "이미 존재하는 스터디그룹 이름입니다." });
+
+        const updatedGroup = await groupController.updateGroup(groupId, groupName, description);
+
+        res.status(200).json({
+            updatedGroup,
+            message: "스터디그룹 정보가 수정되었습니다.",
+        });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: "Server Error" });
@@ -149,37 +171,6 @@ router.post("/", async (req, res) => {
     }
 });
 
-router.put("/:groupId", async (req, res) => {
-    try {
-        const { groupId } = req.params;
-        const { groupName, description, groupImage, userId } = req.body;
-
-        if (!userId) return res.status(401).json({ message: "로그인이 필요합니다." });
-
-        const groupList = await groupController.getAllGroups();
-        const isDuplicatedGroupName = await groupController.checkDuplicatedGroupName(
-            groupList,
-            groupName,
-            groupId
-        );
-
-        if (isDuplicatedGroupName)
-            return res.status(409).json({ message: "이미 존재하는 스터디그룹 이름입니다." });
-
-        const updatedGroup = await groupController.updateGroup(
-            groupId,
-            groupName,
-            description,
-            groupImage
-        );
-
-        res.status(200).json({ updatedGroup, message: "스터디그룹 정보가 수정되었습니다." });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ message: "Server Error" });
-    }
-});
-
 router.delete("/:groupId", async (req, res) => {
     try {
         const { groupId } = req.params;
@@ -187,7 +178,7 @@ router.delete("/:groupId", async (req, res) => {
 
         const deletedGroup = await Group.findByIdAndDelete(groupId);
 
-        if (!deletedGroup._id)
+        if (!deletedGroup)
             return res.status(404).json({ message: "삭제하려는 그룹을 찾을 수 없습니다." });
 
         await Comment.deleteMany({ group: deletedGroup._id });
@@ -200,20 +191,16 @@ router.delete("/:groupId", async (req, res) => {
             deletedGroup.groupImage !== `/uploads/study-groups/default-groupImage.png`
         ) {
             const deleteFilePath = path.join(__dirname, "..", deletedGroup.groupImage);
-
             if (fs.existsSync(deleteFilePath)) {
                 fs.unlink(deleteFilePath, (error) => {
-                    if (error) {
-                        console.error("파일 삭제 오류:", error);
-                        return;
-                    }
-                    console.log("파일 삭제 성공!");
+                    if (error) console.error("이미지 삭제 실패", error);
                 });
             }
         }
 
         const user = await User.findById(userId);
-        const groups = await Group.find({ _id: user.group.map((g) => g) });
+
+        const groups = await Group.find({ _id: { $in: user.group } });
 
         res.status(200).json({
             groups,

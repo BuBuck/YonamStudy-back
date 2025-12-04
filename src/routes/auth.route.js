@@ -135,23 +135,27 @@ router.post("/sign-up", async (req, res) => {
             verificationCode += chars.charAt(Math.floor(Math.random() * chars.length));
         }
 
-        let fommattedPhoneNumber = phoneNumber;
+        let formattedPhoneNumber = phoneNumber;
         // 전화번호에 하이픈이 없는 경우 하이픈 추가
         if (!phoneNumber.match(/^\d{3}-\d{4}-\d{4}$/)) {
-            fommattedPhoneNumber = phoneNumber.replace(/(\d{3})-?(\d{4})-?(\d{4})/, "$1-$2-$3");
+            formattedPhoneNumber = phoneNumber.replace(
+                /^(\d{3})[-\s]?(\d{4})[-\s]?(\d{4})$/,
+                "$1-$2-$3"
+            );
         }
 
         // 새로운 사용자 생성 (모든 필드 포함)
         user = new User({
             name,
             major,
-            phoneNumber: fommattedPhoneNumber,
+            phoneNumber: formattedPhoneNumber,
             birthdate,
             email,
             studentId,
             password: hashedPassword,
             isVerified: true,
             online: false,
+            userProfile: user.userProfile,
             group: [],
         });
 
@@ -476,7 +480,9 @@ router.post("/login", async (req, res) => {
                     studentId: user.studentId,
                     name: user.name,
                     major: user.major,
+                    phoneNumber: user.phoneNumber,
                     online: user.online,
+                    userProfile: user.userProfile,
                     group: groups,
                 },
             });

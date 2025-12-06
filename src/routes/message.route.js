@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
+const Group = require("../models/Group");
 const Message = require("../models/Message");
 
 const groupController = require("../controllers/group.controller");
@@ -123,7 +124,7 @@ router.get("/:groupId/messages", async (req, res) => {
         const { groupId } = req.params;
         const userId = req.headers.userid;
 
-        const groupData = await groupController.getGroup(groupId);
+        const groupData = await Group.findById(groupId);
         const checkMember = await groupController.checkMember(groupData, userId);
 
         if (!checkMember) {

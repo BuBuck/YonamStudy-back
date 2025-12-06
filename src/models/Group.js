@@ -11,10 +11,7 @@ const groupSchema = new mongoose.Schema(
         description: {
             type: String,
         },
-        groupImage: {
-            type: String,
-            default: "/uploads/study-groups/default-groupImage.png",
-        },
+        groupImage: { type: String, default: "/uploads/users/default-userProfile.png" },
         groupLeader: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

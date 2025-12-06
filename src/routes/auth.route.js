@@ -436,7 +436,7 @@ router.post("/send-verification", async (req, res) => {
 router.post("/login", async (req, res) => {
     try {
         // 이메일 대신 '학번' 과 '비밀번호'를 받음
-        const { studentId, password } = req.body;
+        const { studentId, password, stayLogin } = req.body;
 
         // 학번으로 사용자 검색
         const user = await User.findOne({ studentId });
@@ -466,13 +466,18 @@ router.post("/login", async (req, res) => {
             },
         };
 
-        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" }, (err, token) => {
-            if (err) throw err;
+        const expiresIn = stayLogin ? "7d" : "1h";
 
-            const expiresInMs = 60 * 60 * 1000;
+        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: expiresIn }, (error, token) => {
+            if (error) throw error;
+
+            const ONE_HOUR = 1000 * 60 * 60;
+            const SEVEN_DAYS = 1000 * 60 * 60 * 24 * 7;
+
+            const expiresInMs = expiresIn === "1h" ? ONE_HOUR : SEVEN_DAYS;
             const expirationTime = new Date().getTime() + expiresInMs;
 
-            res.json({
+            res.status(200).json({
                 expiresToken: token,
                 expiresAt: expirationTime,
                 user: {

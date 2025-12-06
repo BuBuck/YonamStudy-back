@@ -10,13 +10,22 @@ router.get("/:groupId/comments", async (req, res) => {
     try {
         const { groupId } = req.params;
 
-        const comments = await Comment.find({ group: groupId, isDeleted: false })
-            .populate("commenter", "name major userProfile")
-            .sort({ createdAt: 1 });
+        const comments = await Comment.find({ group: groupId })
+            .populate([
+                {
+                    path: "commenter",
+                    select: "name major userProfile",
+                },
+                {
+                    path: "group",
+                    select: "groupLeader",
+                },
+            ])
+            .sort({ createdAt: -1 });
 
         if (!comments) return res.status(400).json({ message: "댓글 없음" });
 
-        res.status(200).json(comments);
+        res.status(200).json({ comments, message: "댓글들이 정상적으로 불러와졌습니다." });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: "Server Error" });
@@ -32,9 +41,18 @@ router.post("/:groupId/comments", async (req, res) => {
 
         const newComment = await commentController.saveComment(groupId, userId, content);
 
-        await newComment.populate("commenter", "name major userProfile");
+        await newComment.populate([
+            {
+                path: "commenter",
+                select: "name major userProfile",
+            },
+            {
+                path: "group",
+                select: "groupLeader",
+            },
+        ]);
 
-        res.status(201).json(newComment);
+        res.status(201).json({ newComment, message: "댓글이 정상적으로 작성되었습니다." });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: "Server Error" });
@@ -44,24 +62,39 @@ router.post("/:groupId/comments", async (req, res) => {
 router.put("/:groupId/:commentId", async (req, res) => {
     try {
         const { groupId, commentId } = req.params;
-        const { content } = req.body;
-        const { userId } = req.query;
+        const { content, userId } = req.body;
 
         const comment = await Comment.findById(commentId);
 
-        if (!groupId) return res.status(404).json({ message: "존재하지 않은 스터디 그룹입니다." });
+        if (comment.group.toString() !== groupId) {
+            return res.status(404).json({ message: "존재하지 않은 스터디 그룹입니다." });
+        }
 
         if (!comment) return res.status(404).json({ message: "댓글이 없습니다." });
 
         if (comment.commenter.toString() !== userId.toString())
             return res.status(403).json({ message: "수정 권한이 없습니다." });
 
-        comment.content = content;
-        await comment.save();
+        const updatedComment = await Comment.findByIdAndUpdate(
+            commentId,
+            {
+                content: content,
+            },
+            { new: true }
+        );
 
-        await comment.populate("commenter", "name major userProfile");
+        await updatedComment.populate([
+            {
+                path: "commenter",
+                select: "name major userProfile",
+            },
+            {
+                path: "group",
+                select: "groupLeader",
+            },
+        ]);
 
-        res.status(200).json(comment);
+        res.status(200).json({ updatedComment, message: "댓글이 수정되었습니다." });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: "Server Error" });
@@ -71,23 +104,33 @@ router.put("/:groupId/:commentId", async (req, res) => {
 router.delete("/:groupId/:commentId", async (req, res) => {
     try {
         const { groupId, commentId } = req.params;
-        const { userId } = req.query;
+        const { userId } = req.body;
 
-        const comment = await Comment.findById(commentId);
+        const comment = await Comment.findById(commentId).populate("group", "groupLeader");
 
-        if (!groupId) return res.status(404).json({ message: "존재하지 않은 스터디 그룹입니다." });
+        console.log(comment.group._id);
 
         if (!comment)
             return res.status(404).json({ message: "이미 삭제되었거나 없는 댓글입니다." });
 
-        if (comment.commenter.toString() !== userId.toString())
+        if (comment.group._id.toString() !== groupId) {
+            return res.status(404).json({ message: "존재하지 않은 스터디 그룹입니다." });
+        }
+
+        if (
+            comment.commenter.toString() !== userId ||
+            comment.group.groupLeader.toString() !== userId
+        ) {
             return res.status(403).json({ message: "삭제 권한이 없습니다." });
+        }
 
-        comment.isDeleted = true;
+        const deletedComment = await Comment.findByIdAndUpdate(
+            commentId,
+            { isDeleted: true },
+            { new: true }
+        );
 
-        await comment.save();
-
-        res.status(200).json({ message: "댓글이 삭제되었습니다." });
+        res.status(200).json({ deletedComment, message: "댓글이 삭제되었습니다." });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: "Server Error" });

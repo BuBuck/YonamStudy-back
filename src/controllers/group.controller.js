@@ -20,18 +20,33 @@ groupController.checkMember = async (groupData, userId) => {
     return isCollected;
 };
 
-groupController.saveGroup = async (groupName, description, groupImage, userId) => {
+groupController.saveGroup = async (
+    groupName,
+    description,
+    groupImage,
+    schedule,
+    location,
+    duration,
+    difficulty,
+    tags,
+    maxMembers,
+    userId
+) => {
     const newGroup = new Group({
         group: groupName,
         description: description,
         groupImage: groupImage,
         groupLeader: userId,
         groupMembers: [],
-        schedule: "test",
-        location: "test",
-        period: "test",
-        level: "test",
-        tags: [],
+        schedule: {
+            weeks: schedule.weeks,
+            time: schedule.time,
+        },
+        location: location,
+        duration: duration,
+        difficulty: difficulty,
+        tags: tags,
+        maxMembers: maxMembers,
     });
 
     await newGroup.save();
@@ -39,13 +54,28 @@ groupController.saveGroup = async (groupName, description, groupImage, userId) =
     return newGroup;
 };
 
-groupController.updateGroup = async (groupId, groupName, description, groupImage) => {
+groupController.updateGroup = async (
+    groupId,
+    groupName,
+    description,
+    schedule,
+    location,
+    duration,
+    difficulty,
+    tags,
+    maxMembers
+) => {
     const updatedGroup = await Group.findByIdAndUpdate(
         groupId,
         {
             group: groupName,
             description: description,
-            groupImage: groupImage,
+            schedule: schedule,
+            location: location,
+            duration: duration,
+            difficulty: difficulty,
+            tags: tags,
+            maxMembers: maxMembers,
         },
         { new: true }
     );

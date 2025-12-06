@@ -120,7 +120,17 @@ router.put("/:groupId", async (req, res) => {
     try {
         const { groupId } = req.params;
 
-        const { groupName, description, userId } = req.body;
+        const {
+            groupName,
+            description,
+            schedule,
+            location,
+            duration,
+            difficulty,
+            tags,
+            maxMembers,
+            userId,
+        } = req.body;
 
         if (!userId) return res.status(401).json({ message: "로그인이 필요합니다." });
 
@@ -134,7 +144,17 @@ router.put("/:groupId", async (req, res) => {
         if (isDuplicatedGroupName)
             return res.status(409).json({ message: "이미 존재하는 스터디그룹 이름입니다." });
 
-        const updatedGroup = await groupController.updateGroup(groupId, groupName, description);
+        const updatedGroup = await groupController.updateGroup(
+            groupId,
+            groupName,
+            description,
+            schedule,
+            location,
+            duration,
+            difficulty,
+            tags,
+            maxMembers
+        );
 
         res.status(200).json({
             updatedGroup,
@@ -148,7 +168,18 @@ router.put("/:groupId", async (req, res) => {
 
 router.post("/", async (req, res) => {
     try {
-        const { groupName, description, groupImage, userId } = req.body;
+        const {
+            groupName,
+            description,
+            groupImage,
+            schedule,
+            location,
+            duration,
+            difficulty,
+            tags,
+            maxMembers,
+            userId,
+        } = req.body;
 
         if (!userId) return res.status(401).json({ message: "로그인이 필요합니다." });
 
@@ -161,7 +192,18 @@ router.post("/", async (req, res) => {
         if (isDuplicatedGroupName)
             return res.status(409).json({ message: "이미 존재하는 스터디그룹 이름입니다." });
 
-        const group = await groupController.saveGroup(groupName, description, groupImage, userId);
+        const group = await groupController.saveGroup(
+            groupName,
+            description,
+            groupImage,
+            schedule,
+            location,
+            duration,
+            difficulty,
+            tags,
+            maxMembers,
+            userId
+        );
         await userController.addUserToGroup(userId, group);
 
         res.status(201).json({

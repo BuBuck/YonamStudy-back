@@ -9,8 +9,9 @@
         style="
             margin: 0;
             padding: 0;
-            background-color: #e8f0f0;
+            background-color: #e8f0f0; /* 테마 배경색 */
             font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+            word-break: keep-all;
         "
     >
         <table
@@ -30,8 +31,9 @@
                         style="
                             background-color: white;
                             border-radius: 13px;
-                            box-shadow: 0px 0px 30px 4px rgba(0, 0, 0, 0.1);
+                            box-shadow: 0px 10px 25px -5px rgba(0, 0, 0, 0.1); /* 그림자 통일 */
                             overflow: hidden;
+                            border: 1px solid white;
                         "
                     >
                         <tr>
@@ -39,8 +41,8 @@
                                 <div style="text-align: center; margin-bottom: 40px">
                                     <div
                                         style="
-                                            color: #333333;
-                                            font-size: 28px; /* 44px -> 28px */
+                                            color: #2d3748; /* Primary Dark */
+                                            font-size: 28px;
                                             font-weight: 700;
                                             line-height: 1.4;
                                         "
@@ -55,14 +57,14 @@
                                             display: inline-block;
                                             width: 100%;
                                             max-width: 400px;
-                                            background: #ececec;
-                                            border-radius: 12px; /* 20px -> 12px */
-                                            border: 1px solid #dedede;
-                                            padding: 25px 0; /* 높이 대신 padding 사용 */
-                                            color: #2c3e50;
-                                            font-size: 32px; /* 50px -> 32px */
-                                            font-weight: 700;
-                                            letter-spacing: 2px;
+                                            background: #fff5f5; /* 아주 연한 Accent 배경 */
+                                            border-radius: 12px;
+                                            border: 2px dashed #ff6b6b; /* Accent 점선 테두리로 강조 */
+                                            padding: 25px 0;
+                                            color: #ff6b6b; /* Accent Color */
+                                            font-size: 32px;
+                                            font-weight: 800;
+                                            letter-spacing: 4px;
                                         "
                                     >
                                         <%= verificationCode %>
@@ -72,18 +74,18 @@
                                 <div style="text-align: left">
                                     <p
                                         style="
-                                            color: #333333;
-                                            font-size: 16px; /* 26px -> 16px */
+                                            color: #2d3748; /* Primary Text */
+                                            font-size: 16px;
                                             font-weight: 500;
                                             line-height: 1.6;
-                                            margin: 0 0 15px 0; /* 하단 여백 추가 */
+                                            margin: 0 0 15px 0;
                                         "
                                     >
                                         안녕하세요. 연암공과대학교 학우님,
                                     </p>
                                     <p
                                         style="
-                                            color: #333333;
+                                            color: #4a5568; /* Primary Color */
                                             font-size: 16px;
                                             font-weight: 500;
                                             line-height: 1.6;
@@ -92,16 +94,16 @@
                                     >
                                         회원가입을 완료하시려면 위의 코드를 입력해 인증을
                                         완료해주세요.<br />
-                                        <strong style="color: #e74c3c">(3분 후 만료)</strong>
+                                        <strong style="color: #ff6b6b">(3분 후 만료)</strong>
                                     </p>
                                     <p
                                         style="
-                                            color: #999999;
+                                            color: #a0aec0; /* Secondary Muted Text */
                                             font-size: 14px;
                                             font-weight: 400;
                                             line-height: 1.5;
                                             margin: 0;
-                                            border-top: 1px solid #eeeeee;
+                                            border-top: 1px solid #e2e8f0;
                                             padding-top: 20px;
                                         "
                                     >

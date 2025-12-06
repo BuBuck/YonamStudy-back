@@ -155,7 +155,6 @@ router.post("/sign-up", async (req, res) => {
             password: hashedPassword,
             isVerified: true,
             online: false,
-            userProfile: user.userProfile,
             group: [],
         });
 

@@ -11,7 +11,10 @@ module.exports = function (io) {
 
         socket.on("joinGroup", async (groupId, cb) => {
             try {
-                socket.join(groupId);
+                if (groupId) {
+                    socket.join(groupId);
+                    if (cb) cb({ ok: true });
+                }
 
                 // 나중에 그룹에 초대되었을 떄 메시지
                 // const welcomeMessage = {
@@ -20,8 +23,6 @@ module.exports = function (io) {
                 // };
 
                 // socket.to(user.group.toString()).emit("message", welcomeMessage);
-
-                if (cb) cb({ ok: true });
             } catch (error) {
                 console.error("joinGroup error:", error);
                 if (cb) cb({ ok: false, error: error.message });
@@ -59,7 +60,7 @@ module.exports = function (io) {
             }
         });
 
-        socket.on("leaveGroup", async (groupId, cb) => {
+        socket.on("leaveGroup", async (groupId) => {
             socket.leave(groupId);
         });
 

@@ -73,17 +73,16 @@ router.put("/read", async (req, res) => {
         res.status(500).json({ message: "Server Error" });
     }
 });
-
 router.get("/lastMessages", async (req, res) => {
     try {
         const { userId, group } = req.query;
 
-        if (!group) {
+        // [수정] group이 빈 문자열("")이면 빈 객체 반환 (ObjectId 에러 방지)
+        if (!group || group.trim() === "") {
             return res.status(200).json({});
         }
 
         const rawGroups = group.split(",");
-
         const groupIds = rawGroups.map((id) => new mongoose.Types.ObjectId(id));
 
         const lastMessages = await Message.aggregate([
@@ -102,7 +101,9 @@ router.get("/lastMessages", async (req, res) => {
         const lastMessageMap = {};
 
         lastMessages.forEach((stat) => {
-            const isMe = stat.lastSender.toString() === userId;
+            // [수정] lastSender가 존재하는지 확인 후 toString() 호출 (Null Check)
+            const senderId = stat.lastSender ? stat.lastSender.toString() : null;
+            const isMe = senderId === userId;
 
             lastMessageMap[stat._id.toString()] = {
                 message: stat.lastMessage,
@@ -122,13 +123,20 @@ router.get("/lastMessages", async (req, res) => {
 router.get("/:groupId/messages", async (req, res) => {
     try {
         const { groupId } = req.params;
-        const userId = req.headers.userid;
+        const userId = req.headers.userid; // headers는 소문자로 옴
 
         const groupData = await Group.findById(groupId);
+
+        // [수정] 그룹 정보가 없을 경우 처리 (서버 크래시 방지)
+        if (!groupData) {
+            return res.status(404).json({ message: "그룹을 찾을 수 없습니다." });
+        }
+
         const checkMember = await groupController.checkMember(groupData, userId);
 
+        // checkMember가 false거나, undefined(로직오류)일 경우 모두 차단
         if (!checkMember) {
-            return res.status(403).json({ message: `당신이 소속된 스터디 그룹이 아님` });
+            return res.status(403).json({ message: `당신이 소속된 스터디 그룹이 아닙니다.` });
         }
 
         const messages = await Message.find({ group: groupId })

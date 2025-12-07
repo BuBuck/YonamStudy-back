@@ -4,6 +4,7 @@ const fs = require("fs");
 
 const User = require("../models/User");
 const Group = require("../models/Group");
+const Application = require("../models/Application");
 const Comment = require("../models/Comment");
 const Message = require("../models/Message");
 
@@ -47,7 +48,7 @@ router.post("/upload-groupImage", async (req, res) => {
 
 router.get("/", async (req, res) => {
     try {
-        const groups = await groupController.getAllGroups();
+        const groups = await Group.find({}).populate("groupMembers");
         res.status(200).json(groups);
     } catch (error) {
         console.error(error.message);
@@ -254,6 +255,68 @@ router.delete("/:groupId", async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server Error" });
+    }
+});
+
+router.post("/:id/applications", async (req, res) => {
+    try {
+        const { id } = req.params; // 스터디 그룹 ID
+        const { userId, answers } = req.body; // 프론트에서 보낸 유저ID와 답변목록
+
+        // 1. 이미 지원했는지 중복 체크 (선택사항이지만 추천)
+        const existingApp = await Application.findOne({
+            studyGroup: id,
+            applicant: userId,
+        });
+
+        if (existingApp) {
+            return res.status(409).json({ message: "이미 지원한 스터디입니다." });
+        }
+
+        // 2. 신청서 생성
+        const newApplication = new Application({
+            studyGroup: id,
+            applicant: userId,
+            answers: answers, // 프론트에서 포맷 맞춰서 보내줄 예정
+        });
+
+        // 3. 저장
+        await newApplication.save();
+
+        res.status(201).json({
+            message: "신청서가 성공적으로 제출되었습니다.",
+            application: newApplication,
+        });
+    } catch (error) {
+        console.error("신청서 제출 에러:", error);
+        res.status(500).json({ message: "서버 에러 발생" });
+    }
+});
+
+router.put("/:groupId/questions", async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const { questions } = req.body; // 프론트에서 보낸 { questions: [...] }
+
+        // 1. 그룹 찾아서 업데이트
+        const updatedGroup = await Group.findByIdAndUpdate(
+            groupId,
+            { questions: questions }, // questions 필드 덮어쓰기
+            { new: true } // 업데이트된 최신 데이터를 반환
+        );
+
+        if (!updatedGroup) {
+            return res.status(404).json({ message: "스터디 그룹을 찾을 수 없습니다." });
+        }
+
+        // 2. 결과 반환
+        res.status(200).json({
+            message: "저장 성공",
+            questions: updatedGroup.questions,
+        });
+    } catch (error) {
+        console.error("질문 저장 에러:", error);
+        res.status(500).json({ message: "서버 내부 오류" });
     }
 });
 

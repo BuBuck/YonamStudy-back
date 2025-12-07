@@ -9,7 +9,7 @@ groupController.getAllGroups = async () => {
 };
 
 groupController.checkMember = async (groupData, userId) => {
-    if (groupData.groupLeader.toString() === userId.toString()) return true;
+    if (groupData.groupLeader._id.toString() === userId.toString()) return true;
 
     const isMember = groupData.groupMembers.some((member) => {
         const memberId = member._id ? member._id : member;

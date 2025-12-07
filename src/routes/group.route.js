@@ -326,7 +326,7 @@ router.get("/:groupId/applications", async (req, res) => {
 
         // 1. 해당 그룹ID를 가진 신청서들을 찾음
         // 2. .populate('applicant')를 써서 신청한 사람의 이름/프로필 정보도 같이 가져옴
-        const applications = await Application.find({ studyGroup: groupId }).populate(
+        const applications = await Application.find({ group: groupId }).populate(
             "applicant",
             "name userProfile email major"
         ); // 필요한 유저 정보만 선택

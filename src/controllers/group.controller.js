@@ -9,15 +9,14 @@ groupController.getAllGroups = async () => {
 };
 
 groupController.checkMember = async (groupData, userId) => {
-    let isCollected = false;
+    if (groupData.groupLeader.toString() === userId.toString()) return true;
 
-    if (groupData.groupLeader._id.toString() === userId.toString()) return (isCollected = true);
-
-    groupData.groupMembers.map((groupMember) => {
-        if (groupMember._id.toString() === userId.toString()) return (isCollected = true);
+    const isMember = groupData.groupMembers.some((member) => {
+        const memberId = member._id ? member._id : member;
+        return memberId.toString() === userId.toString();
     });
 
-    return isCollected;
+    return isMember;
 };
 
 groupController.saveGroup = async (

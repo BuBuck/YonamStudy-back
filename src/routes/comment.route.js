@@ -108,8 +108,6 @@ router.delete("/:groupId/:commentId", async (req, res) => {
 
         const comment = await Comment.findById(commentId).populate("group", "groupLeader");
 
-        console.log(comment.group._id);
-
         if (!comment)
             return res.status(404).json({ message: "이미 삭제되었거나 없는 댓글입니다." });
 
@@ -117,9 +115,11 @@ router.delete("/:groupId/:commentId", async (req, res) => {
             return res.status(404).json({ message: "존재하지 않은 스터디 그룹입니다." });
         }
 
+        console.log(comment.group.groupLeader.toString() !== userId);
+
         if (
-            comment.commenter.toString() !== userId ||
-            comment.group.groupLeader.toString() !== userId
+            comment.group.groupLeader.toString() !== userId &&
+            comment.commenter.toString() !== userId
         ) {
             return res.status(403).json({ message: "삭제 권한이 없습니다." });
         }

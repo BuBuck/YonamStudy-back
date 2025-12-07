@@ -43,7 +43,7 @@ module.exports = function (io) {
             }
         });
 
-        socket.on("sendMessage", async (receivedMessage, userId, groupId, cb) => {
+        socket.on("sendMessage", async (receivedMessage, userId, groupId) => {
             try {
                 const newMessage = await messageController.saveMessage(
                     receivedMessage,
@@ -54,10 +54,8 @@ module.exports = function (io) {
                 await newMessage.populate("sender", "name");
 
                 io.to(groupId).emit("receivedMessage", newMessage);
-
-                return cb({ ok: true });
             } catch (error) {
-                cb({ ok: false, error: error.message });
+                console.error(error);
             }
         });
 

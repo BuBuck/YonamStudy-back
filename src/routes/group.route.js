@@ -258,14 +258,14 @@ router.delete("/:groupId", async (req, res) => {
     }
 });
 
-router.post("/:id/applications", async (req, res) => {
+router.post("/:groupId/applications", async (req, res) => {
     try {
-        const { id } = req.params; // 스터디 그룹 ID
+        const { groupId } = req.params; // 스터디 그룹 ID
         const { userId, answers } = req.body; // 프론트에서 보낸 유저ID와 답변목록
 
         // 1. 이미 지원했는지 중복 체크 (선택사항이지만 추천)
         const existingApp = await Application.findOne({
-            studyGroup: id,
+            studyGroup: groupId,
             applicant: userId,
         });
 
@@ -275,7 +275,7 @@ router.post("/:id/applications", async (req, res) => {
 
         // 2. 신청서 생성
         const newApplication = new Application({
-            studyGroup: id,
+            studyGroup: groupId,
             applicant: userId,
             answers: answers, // 프론트에서 포맷 맞춰서 보내줄 예정
         });
@@ -317,6 +317,48 @@ router.put("/:groupId/questions", async (req, res) => {
     } catch (error) {
         console.error("질문 저장 에러:", error);
         res.status(500).json({ message: "서버 내부 오류" });
+    }
+});
+
+router.get("/:groupId/applications", async (req, res) => {
+    try {
+        const { groupId } = req.params;
+
+        // 1. 해당 그룹ID를 가진 신청서들을 찾음
+        // 2. .populate('applicant')를 써서 신청한 사람의 이름/프로필 정보도 같이 가져옴
+        const applications = await Application.find({ studyGroup: groupId }).populate(
+            "applicant",
+            "name userProfile email major"
+        ); // 필요한 유저 정보만 선택
+
+        res.status(200).json({ applications });
+    } catch (error) {
+        console.error("신청서 목록 조회 실패:", error);
+        res.status(500).json({ message: "서버 에러 발생" });
+    }
+});
+
+router.delete("/:groupId/members", async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const { userId } = req.body; // 삭제할 유저 ID
+
+        if (!userId) return res.status(400).json({ message: "유저 ID가 필요합니다." });
+
+        // 1. 그룹의 멤버 리스트에서 유저 제거 ($pull)
+        await Group.findByIdAndUpdate(groupId, {
+            $pull: { groupMembers: userId },
+        });
+
+        // 2. 유저의 그룹 리스트에서도 해당 그룹 제거 ($pull)
+        await User.findByIdAndUpdate(userId, {
+            $pull: { group: groupId },
+        });
+
+        res.status(200).json({ message: "성공적으로 탈퇴되었습니다." });
+    } catch (error) {
+        console.error("그룹 탈퇴 실패:", error);
+        res.status(500).json({ message: "서버 에러 발생" });
     }
 });
 

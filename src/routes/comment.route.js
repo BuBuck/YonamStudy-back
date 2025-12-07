@@ -59,7 +59,7 @@ router.post("/:groupId/comments", async (req, res) => {
     }
 });
 
-router.put("/:groupId/:commentId", async (req, res) => {
+router.put("/:groupId/comments/:commentId", async (req, res) => {
     try {
         const { groupId, commentId } = req.params;
         const { content, userId } = req.body;
@@ -101,7 +101,7 @@ router.put("/:groupId/:commentId", async (req, res) => {
     }
 });
 
-router.delete("/:groupId/:commentId", async (req, res) => {
+router.delete("/:groupId/comments/:commentId", async (req, res) => {
     try {
         const { groupId, commentId } = req.params;
         const { userId } = req.body;

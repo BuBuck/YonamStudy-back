@@ -265,7 +265,7 @@ router.post("/:groupId/applications", async (req, res) => {
 
         // 1. 이미 지원했는지 중복 체크 (선택사항이지만 추천)
         const existingApp = await Application.findOne({
-            studyGroup: groupId,
+            group: groupId,
             applicant: userId,
         });
 
@@ -275,7 +275,7 @@ router.post("/:groupId/applications", async (req, res) => {
 
         // 2. 신청서 생성
         const newApplication = new Application({
-            studyGroup: groupId,
+            group: groupId,
             applicant: userId,
             answers: answers, // 프론트에서 포맷 맞춰서 보내줄 예정
         });

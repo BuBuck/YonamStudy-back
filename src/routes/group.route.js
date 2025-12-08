@@ -362,4 +362,45 @@ router.delete("/:groupId/members", async (req, res) => {
     }
 });
 
+// [추가] 신청서 승인/거절 처리
+router.patch("/:groupId/applications/:applicationId", async (req, res) => {
+    try {
+        const { groupId, applicationId } = req.params;
+        const { status } = req.body; // "approved" 또는 "rejected"
+
+        // 1. 신청서 찾기
+        const application = await Application.findById(applicationId);
+        if (!application) {
+            return res.status(404).json({ message: "신청서를 찾을 수 없습니다." });
+        }
+
+        // 2. 상태 업데이트
+        application.status = status;
+        await application.save();
+
+        // 3. [중요] '승인(approved)'일 경우 -> 정식 멤버로 등록
+        if (status === "approved") {
+            const applicantId = application.applicant;
+
+            // 그룹 멤버에 추가 ($addToSet은 중복 방지)
+            await Group.findByIdAndUpdate(groupId, {
+                $addToSet: { groupMembers: applicantId },
+            });
+
+            // 유저의 그룹 목록에도 추가
+            await User.findByIdAndUpdate(applicantId, {
+                $addToSet: { group: groupId },
+            });
+        }
+
+        res.status(200).json({
+            message: status === "approved" ? "승인 완료되었습니다." : "거절되었습니다.",
+            application,
+        });
+    } catch (error) {
+        console.error("상태 변경 에러:", error);
+        res.status(500).json({ message: "서버 에러 발생" });
+    }
+});
+
 module.exports = router;

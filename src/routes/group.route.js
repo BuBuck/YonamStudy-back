@@ -13,6 +13,36 @@ const userController = require("../controllers/user.controller");
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   name: Group
+ *   description: 스터디 그룹 관련 API
+ */
+
+/**
+ * @swagger
+ * /api/study-groups/upload-groupImage:
+ *   post:
+ *     summary: 스터디 그룹 이미지 업로드
+ *     tags: [Group]
+ *     consumes:
+ *       - multipart/form-data
+ *     parameters:
+ *       - in: formData
+ *         name: image
+ *         type: file
+ *         description: The file to upload.
+ *       - in: formData
+ *         name: groupId
+ *         type: string
+ *         description: The ID of the group.
+ *     responses:
+ *       200:
+ *         description: 업로드 및 DB 저장 완료
+ *       500:
+ *         description: 서버 오류
+ */
 router.post("/upload-groupImage", async (req, res) => {
     try {
         const { groupId } = req.body;
@@ -46,6 +76,24 @@ router.post("/upload-groupImage", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups:
+ *   get:
+ *     summary: 모든 스터디 그룹 조회
+ *     tags: [Group]
+ *     responses:
+ *       200:
+ *         description: 모든 스터디 그룹 목록
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Group'
+ *       500:
+ *         description: 서버 오류
+ */
 router.get("/", async (req, res) => {
     try {
         const groups = await Group.find({}).populate("groupMembers");
@@ -56,6 +104,26 @@ router.get("/", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/search:
+ *   get:
+ *     summary: 스터디 그룹 검색
+ *     tags: [Group]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: 검색어
+ *     responses:
+ *       200:
+ *         description: 검색 결과
+ *       400:
+ *         description: 검색어 필요
+ *       500:
+ *         description: 서버 오류
+ */
 router.get("/search", async (req, res) => {
     try {
         // 프론트에서 보낸 ?q=검색어
@@ -86,6 +154,25 @@ router.get("/search", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/{groupId}:
+ *   get:
+ *     summary: 특정 스터디 그룹 조회
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 조회할 스터디 그룹의 ID
+ *     responses:
+ *       200:
+ *         description: 스터디 그룹 정보
+ *       500:
+ *         description: 서버 오류
+ */
 router.get("/:groupId", async (req, res) => {
     try {
         const { groupId } = req.params;
@@ -100,6 +187,31 @@ router.get("/:groupId", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/update-groupImage:
+ *   put:
+ *     summary: 스터디 그룹 이미지 변경
+ *     tags: [Group]
+ *     consumes:
+ *       - multipart/form-data
+ *     parameters:
+ *       - in: formData
+ *         name: image
+ *         type: file
+ *         description: The file to upload.
+ *       - in: formData
+ *         name: groupId
+ *         type: string
+ *         description: The ID of the group.
+ *     responses:
+ *       200:
+ *         description: 그룹 이미지 변경 성공
+ *       404:
+ *         description: 그룹을 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.put("/update-groupImage", async (req, res) => {
     try {
         const { groupId } = req.body;
@@ -147,6 +259,34 @@ router.put("/update-groupImage", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/{groupId}:
+ *   put:
+ *     summary: 스터디 그룹 정보 수정
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 수정할 스터디 그룹의 ID
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/components/schemas/Group'
+ *     responses:
+ *       200:
+ *         description: 스터디 그룹 정보 수정 성공
+ *       401:
+ *         description: 로그인이 필요합니다.
+ *       409:
+ *         description: 이미 존재하는 스터디 그룹 이름
+ *       500:
+ *         description: 서버 오류
+ */
 router.put("/:groupId", async (req, res) => {
     try {
         const { groupId } = req.params;
@@ -197,6 +337,28 @@ router.put("/:groupId", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups:
+ *   post:
+ *     summary: 새로운 스터디 그룹 생성
+ *     tags: [Group]
+ *     parameters:
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/components/schemas/Group'
+ *     responses:
+ *       201:
+ *         description: 스터디 그룹 생성 성공
+ *       401:
+ *         description: 로그인이 필요합니다.
+ *       409:
+ *         description: 이미 존재하는 스터디 그룹 이름
+ *       500:
+ *         description: 서버 오류
+ */
 router.post("/", async (req, res) => {
     try {
         const {
@@ -247,6 +409,35 @@ router.post("/", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/{groupId}:
+ *   delete:
+ *     summary: 스터디 그룹 삭제
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 삭제할 스터디 그룹의 ID
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             userId:
+ *               type: string
+ *     responses:
+ *       200:
+ *         description: 스터디 그룹 삭제 성공
+ *       404:
+ *         description: 삭제할 그룹을 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.delete("/:groupId", async (req, res) => {
     try {
         const { groupId } = req.params;
@@ -288,6 +479,38 @@ router.delete("/:groupId", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/{groupId}/applications:
+ *   post:
+ *     summary: 스터디 그룹에 지원서 제출
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             userId:
+ *               type: string
+ *             answers:
+ *               type: array
+ *               items:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: 지원서 제출 성공
+ *       409:
+ *         description: 이미 지원한 스터디
+ *       500:
+ *         description: 서버 오류
+ */
 router.post("/:groupId/applications", async (req, res) => {
     try {
         const { groupId } = req.params; // 스터디 그룹 ID
@@ -323,6 +546,36 @@ router.post("/:groupId/applications", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/{groupId}/questions:
+ *   put:
+ *     summary: 스터디 그룹의 지원서 질문 수정
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             questions:
+ *               type: array
+ *               items:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: 질문 저장 성공
+ *       404:
+ *         description: 스터디 그룹을 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.put("/:groupId/questions", async (req, res) => {
     try {
         const { groupId } = req.params;
@@ -350,6 +603,24 @@ router.put("/:groupId/questions", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/{groupId}/applications:
+ *   get:
+ *     summary: 스터디 그룹의 모든 지원서 조회
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 지원서 목록 조회 성공
+ *       500:
+ *         description: 서버 오류
+ */
 router.get("/:groupId/applications", async (req, res) => {
     try {
         const { groupId } = req.params;
@@ -368,6 +639,34 @@ router.get("/:groupId/applications", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/{groupId}/members:
+ *   delete:
+ *     summary: 스터디 그룹에서 멤버 탈퇴
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             userId:
+ *               type: string
+ *     responses:
+ *       200:
+ *         description: 그룹 탈퇴 성공
+ *       400:
+ *         description: 유저 ID 필요
+ *       500:
+ *         description: 서버 오류
+ */
 router.delete("/:groupId/members", async (req, res) => {
     try {
         const { groupId } = req.params;
@@ -392,7 +691,40 @@ router.delete("/:groupId/members", async (req, res) => {
     }
 });
 
-// [추가] 신청서 승인/거절 처리
+/**
+ * @swagger
+ * /api/study-groups/{groupId}/applications/{applicationId}:
+ *   patch:
+ *     summary: 지원서 승인/거절 처리
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: applicationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             status:
+ *               type: string
+ *               enum: [approved, rejected]
+ *     responses:
+ *       200:
+ *         description: 처리 완료
+ *       404:
+ *         description: 신청서를 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.patch("/:groupId/applications/:applicationId", async (req, res) => {
     try {
         const { groupId, applicationId } = req.params;

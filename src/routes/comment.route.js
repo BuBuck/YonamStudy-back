@@ -6,6 +6,45 @@ const commentController = require("../controllers/comment.controller");
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   name: Comment
+ *   description: 댓글 관련 API
+ */
+
+/**
+ * @swagger
+ * /api/study-groups/{groupId}/comments:
+ *   get:
+ *     summary: 특정 스터디 그룹의 모든 댓글 조회
+ *     tags: [Comment]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 댓글을 조회할 스터디 그룹의 ID
+ *     responses:
+ *       200:
+ *         description: 댓글 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 comments:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comment'
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: 댓글 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.get("/:groupId/comments", async (req, res) => {
     try {
         const { groupId } = req.params;
@@ -32,6 +71,38 @@ router.get("/:groupId/comments", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/{groupId}/comments:
+ *   post:
+ *     summary: 특정 스터디 그룹에 댓글 작성
+ *     tags: [Comment]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 댓글을 작성할 스터디 그룹의 ID
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             content:
+ *               type: string
+ *             userId:
+ *               type: string
+ *         description: 댓글 내용과 작성자 ID
+ *     responses:
+ *       201:
+ *         description: 댓글 작성 성공
+ *       401:
+ *         description: 로그인이 필요합니다.
+ *       500:
+ *         description: 서버 오류
+ */
 router.post("/:groupId/comments", async (req, res) => {
     try {
         const { groupId } = req.params;
@@ -59,6 +130,46 @@ router.post("/:groupId/comments", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/{groupId}/comments/{commentId}:
+ *   put:
+ *     summary: 특정 댓글 수정
+ *     tags: [Comment]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 스터디 그룹의 ID
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 수정할 댓글의 ID
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             content:
+ *               type: string
+ *             userId:
+ *               type: string
+ *         description: 수정할 댓글 내용과 사용자 ID
+ *     responses:
+ *       200:
+ *         description: 댓글 수정 성공
+ *       403:
+ *         description: 수정 권한 없음
+ *       404:
+ *         description: 댓글 또는 그룹 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.put("/:groupId/comments/:commentId", async (req, res) => {
     try {
         const { groupId, commentId } = req.params;
@@ -101,6 +212,44 @@ router.put("/:groupId/comments/:commentId", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/{groupId}/comments/{commentId}:
+ *   delete:
+ *     summary: 특정 댓글 삭제
+ *     tags: [Comment]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 스터디 그룹의 ID
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 삭제할 댓글의 ID
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             userId:
+ *               type: string
+ *         description: 사용자 ID
+ *     responses:
+ *       200:
+ *         description: 댓글 삭제 성공
+ *       403:
+ *         description: 삭제 권한 없음
+ *       404:
+ *         description: 댓글 또는 그룹 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.delete("/:groupId/comments/:commentId", async (req, res) => {
     try {
         const { groupId, commentId } = req.params;

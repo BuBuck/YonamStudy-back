@@ -9,6 +9,37 @@ const userController = require("../controllers/user.controller");
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   name: User
+ *   description: 사용자 관련 API
+ */
+
+/**
+ * @swagger
+ * /api/users/update-userProfile:
+ *   put:
+ *     summary: 사용자 프로필 이미지 업데이트
+ *     tags: [User]
+ *     consumes:
+ *       - multipart/form-data
+ *     parameters:
+ *       - in: formData
+ *         name: userId
+ *         type: string
+ *         required: true
+ *       - in: formData
+ *         name: image
+ *         type: file
+ *     responses:
+ *       200:
+ *         description: 프로필 이미지 변경 성공
+ *       404:
+ *         description: 사용자를 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.put("/update-userProfile", async (req, res) => {
     try {
         const { userId, image } = req.body;
@@ -82,6 +113,36 @@ router.put("/update-userProfile", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/users/{userId}:
+ *   put:
+ *     summary: 사용자 정보 수정
+ *     tags: [User]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             name:
+ *               type: string
+ *             phoneNumber:
+ *               type: string
+ *     responses:
+ *       200:
+ *         description: 회원 정보 수정 성공
+ *       404:
+ *         description: 사용자를 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.put("/:userId", async (req, res) => {
     try {
         const { userId } = req.params;

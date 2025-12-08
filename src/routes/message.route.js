@@ -8,6 +8,34 @@ const groupController = require("../controllers/group.controller");
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   name: Message
+ *   description: 메시지 관련 API
+ */
+
+/**
+ * @swagger
+ * /api/study-groups/notification:
+ *   get:
+ *     summary: 안 읽은 메시지 알림 조회
+ *     tags: [Message]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: group
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 알림 조회 성공
+ *       500:
+ *         description: 서버 오류
+ */
 router.get("/notification", async (req, res) => {
     try {
         const { userId, group } = req.query;
@@ -53,6 +81,29 @@ router.get("/notification", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/read:
+ *   put:
+ *     summary: 메시지 읽음 처리
+ *     tags: [Message]
+ *     parameters:
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             groupId:
+ *               type: string
+ *             userId:
+ *               type: string
+ *     responses:
+ *       200:
+ *         description: 읽음 처리 성공
+ *       500:
+ *         description: 서버 오류
+ */
 router.put("/read", async (req, res) => {
     try {
         const { groupId, userId } = req.body;
@@ -73,6 +124,28 @@ router.put("/read", async (req, res) => {
         res.status(500).json({ message: "Server Error" });
     }
 });
+
+/**
+ * @swagger
+ * /api/study-groups/lastMessages:
+ *   get:
+ *     summary: 마지막 메시지 목록 조회
+ *     tags: [Message]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: group
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 마지막 메시지 목록 조회 성공
+ *       500:
+ *         description: 서버 오류
+ */
 router.get("/lastMessages", async (req, res) => {
     try {
         const { userId, group } = req.query;
@@ -120,6 +193,32 @@ router.get("/lastMessages", async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/study-groups/{groupId}/messages:
+ *   get:
+ *     summary: 특정 스터디 그룹의 메시지 목록 조회
+ *     tags: [Message]
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: header
+ *         name: userid
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 메시지 목록 조회 성공
+ *       403:
+ *         description: 그룹 멤버가 아님
+ *       404:
+ *         description: 그룹을 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.get("/:groupId/messages", async (req, res) => {
     try {
         const { groupId } = req.params;

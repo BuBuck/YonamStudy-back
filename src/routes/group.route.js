@@ -56,6 +56,36 @@ router.get("/", async (req, res) => {
     }
 });
 
+router.get("/search", async (req, res) => {
+    try {
+        // 프론트에서 보낸 ?q=검색어
+        const { q } = req.query;
+
+        if (!q) {
+            return res.status(400).json({ message: "검색어를 입력해주세요." });
+        }
+
+        // 검색어 조건 생성 (정규표현식 사용)
+        // 'i' 옵션: 대소문자 구분 안 함
+        // 부분 일치 검색 가능 (예: '코딩' 검색 -> '재밌는 코딩', '코딩스터디' 모두 검색됨)
+        const regex = new RegExp(q, "i");
+
+        const groups = await Group.find({
+            $or: [
+                { groupName: regex }, // 그룹 이름에 포함되어 있거나
+                { tags: regex }, // 태그 배열 중에 포함되어 있거나
+            ],
+        })
+            .populate("groupMembers") // 멤버 정보 필요하면 추가
+            .populate("groupLeader"); // 리더 정보 필요하면 추가
+
+        res.status(200).json({ groups });
+    } catch (error) {
+        console.error("검색 실패:", error);
+        res.status(500).json({ message: "서버 에러 발생" });
+    }
+});
+
 router.get("/:groupId", async (req, res) => {
     try {
         const { groupId } = req.params;

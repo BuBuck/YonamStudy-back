@@ -382,7 +382,7 @@ router.delete("/:groupId/members", async (req, res) => {
 
         // 2. 유저의 그룹 리스트에서도 해당 그룹 제거 ($pull)
         await User.findByIdAndUpdate(userId, {
-            $pull: { group: groupId },
+            $pull: { group: new mongoose.Types.ObjectId(groupId) },
         });
 
         res.status(200).json({ message: "성공적으로 탈퇴되었습니다." });

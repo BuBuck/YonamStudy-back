@@ -87,7 +87,7 @@ Node.js와 Express 프레임워크를 기반으로 구축되었으며, MongoDB�
 ## 📁 프로젝트 구조
 
 ```
-.
+YonamStudy-back/
 ├── .gitignore
 ├── package-lock.json
 ├── package.json
